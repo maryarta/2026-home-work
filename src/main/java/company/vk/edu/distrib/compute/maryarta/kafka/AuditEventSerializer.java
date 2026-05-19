@@ -12,7 +12,7 @@ public class AuditEventSerializer implements Serializer<AuditEvent> {
     @Override
     public byte[] serialize(String topic, AuditEvent event) {
         if (event == null) {
-            return null;
+            return new byte[0];
         }
         try (
                 ByteArrayOutputStream byteStream = new ByteArrayOutputStream();

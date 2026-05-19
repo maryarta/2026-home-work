@@ -75,9 +75,9 @@ public class AuditableKVServiceImpl implements AuditableKVService {
                 producer.send(eventRecord).get();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Audit sending was interrupted", e);
+                throw new AuditKafkaException("Audit sending was interrupted", e);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to send audit event", e);
+                throw new AuditKafkaException("Failed to send audit event", e);
             }
         }
     }

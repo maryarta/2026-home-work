@@ -24,7 +24,6 @@ public class AuditableKVServiceImpl implements AuditableKVService {
 
     public AuditableKVServiceImpl(int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
-
         this.dao = new H2Dao("data");
         createContext();
     }
@@ -38,12 +37,12 @@ public class AuditableKVServiceImpl implements AuditableKVService {
     }
 
     @Override
-    public void setAsync(boolean enabled) {// ждать ответ от кафки или нет
+    public void setAsync(boolean enabled) {
         async = enabled;
     }
 
     @Override
-    public void start(){
+    public void start() {
         if (producer == null) {
             throw new IllegalStateException("Kafka producer is not initialized");
         }
@@ -52,10 +51,10 @@ public class AuditableKVServiceImpl implements AuditableKVService {
 
     @Override
     public void stop() {
+        server.stop(0);
         if (producer != null) {
             producer.close();
         }
-        server.stop(0);
     }
 
     private void createContext() {
@@ -69,12 +68,12 @@ public class AuditableKVServiceImpl implements AuditableKVService {
         }
         AuditEvent event = new AuditEvent(method, id, timestamp);
         ProducerRecord<String, AuditEvent> eventRecord = new ProducerRecord<>("audit", id, event);
-        if(async) {
+        if (async) {
             producer.send(eventRecord);
         } else {
             try {
                 producer.send(eventRecord).get();
-            }catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Audit sending was interrupted", e);
             } catch (Exception e) {

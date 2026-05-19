@@ -272,9 +272,6 @@ public class KafkaTest extends TestBase {
             NewTopic auditTopic = new NewTopic(AUDIT_TOPIC_NAME, 2, (short) 1);
             adminClient.createTopics(List.of(auditTopic));
         }
-
-
-
     }
 
     @AfterEach

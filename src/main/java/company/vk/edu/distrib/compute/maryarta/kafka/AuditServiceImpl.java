@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
@@ -21,23 +22,37 @@ public class AuditServiceImpl implements AuditService {
 
     public AuditServiceImpl(String bootstrapServers, String consumerGroupId) {
         consumer = createConsumer(bootstrapServers, consumerGroupId);
-        auditFileRepository = new AuditFileRepository("audit"+ consumerGroupId + "-" + UUID.randomUUID() + ".log");
+        auditFileRepository = new AuditFileRepository("audit" + consumerGroupId + "-" + UUID.randomUUID() + ".log");
     }
 
     @Override
     public void start() {
+        if (thread != null && thread.isAlive()) {
+            return;
+        }
         running = true;
-        consumer.subscribe(List.of("audit"));
-        thread = new Thread(() -> {
+        thread = new Thread(this::consumeAuditEvents);
+        thread.start();
+    }
+
+    private void consumeAuditEvents() {
+        try (KafkaConsumer<String, AuditEvent> kafkaConsumer = consumer) {
+            kafkaConsumer.subscribe(List.of("audit"));
             while (running) {
-                ConsumerRecords<String, AuditEvent> records = consumer.poll(Duration.ofMillis(500));
+                ConsumerRecords<String, AuditEvent> records =
+                        kafkaConsumer.poll(Duration.ofMillis(500));
                 for (ConsumerRecord<String, AuditEvent> record : records) {
                     auditFileRepository.save(record.value());
                 }
-                consumer.commitSync();
+                if (!records.isEmpty()) {
+                    kafkaConsumer.commitSync();
+                }
             }
-        });
-        thread.start();
+        } catch (WakeupException e) {
+            if (running) {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -57,7 +72,6 @@ public class AuditServiceImpl implements AuditService {
     public List<AuditEvent> listAuditEntries() {
         return auditFileRepository.findAll();
     }
-
 
     private KafkaConsumer<String, AuditEvent> createConsumer(String bootstrapServers, String consumerGroupId) {
         Properties props = new Properties();

@@ -6,7 +6,6 @@ import company.vk.edu.distrib.compute.KVService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.NoSuchElementException;
 
 public class KVServiceImpl implements KVService {
     private final HttpServer server;

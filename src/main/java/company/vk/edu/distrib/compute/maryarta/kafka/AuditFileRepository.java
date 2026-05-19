@@ -12,9 +12,9 @@ import java.util.List;
 
 public class AuditFileRepository {
     private final Path filePath;
+
     public AuditFileRepository(String fileName) {
         this.filePath = Path.of(fileName);
-
     }
 
     public synchronized void save(AuditEvent event) {
@@ -23,8 +23,7 @@ public class AuditFileRepository {
                 Files.createFile(filePath);
             }
             String line = event.method() + ";" + event.id() + ";" + event.timestamp() + System.lineSeparator();
-            Files.writeString(filePath, line, StandardOpenOption.CREATE, StandardOpenOption.APPEND );
-
+            Files.writeString(filePath, line, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save audit event to file", e);
         }

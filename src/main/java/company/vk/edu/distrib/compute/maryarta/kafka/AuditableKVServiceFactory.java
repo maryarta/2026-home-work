@@ -1,6 +1,5 @@
 package company.vk.edu.distrib.compute.maryarta.kafka;
 
-import company.vk.edu.distrib.compute.AuditableKVService;
 import company.vk.edu.distrib.compute.KVService;
 import company.vk.edu.distrib.compute.KVServiceFactory;
 

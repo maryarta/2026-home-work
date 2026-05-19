@@ -16,6 +16,7 @@ public class EntityHandler implements HttpHandler {
         this.dao = dao;
         this.auditSender = auditSender;
     }
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();

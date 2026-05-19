@@ -87,7 +87,7 @@ public class ShardedKVServiceImpl implements KVService {
                     String method = exchange.getRequestMethod();
                     String query = exchange.getRequestURI().getQuery();
                     String id = parseId(query);
-                    String target = shardingStrategy.getEndpoint(parseId(query));
+                    String target = shardingStrategy.getEndpoint(id);
                     if (!target.equals(selfEndpoint)) {
                         proxyRequest(exchange, target);
                         return;
@@ -101,18 +101,18 @@ public class ShardedKVServiceImpl implements KVService {
                         case "PUT" -> {
                             byte[] newValue = exchange.getRequestBody().readAllBytes();
                             dao.upsert(id, newValue);
-                            exchange.sendResponseHeaders(201, -1);
+                            exchange.sendResponseHeaders(201, 0);
                         }
                         case "DELETE" -> {
                             dao.delete(id);
-                            exchange.sendResponseHeaders(202, -1);
+                            exchange.sendResponseHeaders(202, 0);
                         }
-                        default -> exchange.sendResponseHeaders(405, -1);
+                        default -> exchange.sendResponseHeaders(405, 0);
                     }
                 } catch (IllegalArgumentException e) {
-                    exchange.sendResponseHeaders(400, -1);
+                    exchange.sendResponseHeaders(400, 0);
                 } catch (NoSuchElementException e) {
-                    exchange.sendResponseHeaders(404, -1);
+                    exchange.sendResponseHeaders(404, 0);
                 }
             }
         };

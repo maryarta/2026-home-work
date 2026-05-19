@@ -29,50 +29,8 @@ public class KVServiceImpl implements KVService {
     }
 
     private void createContext() {
-        server.createContext("/v0/status", http -> {
-            String method = http.getRequestMethod();
-            if ("GET".equals(method)) {
-                http.sendResponseHeaders(200,-1);
-            } else {
-                http.sendResponseHeaders(405,-1);
-            }
-            http.close();
-        });
-        server.createContext("/v0/entity", http -> {
-            String method = http.getRequestMethod();
-            String query = http.getRequestURI().getQuery();
-            try {
-                switch (method) {
-                    case "GET" -> {
-                        byte [] value = dao.get(parseId(query));
-                        http.sendResponseHeaders(200, value.length); // OK
-                        http.getResponseBody().write(value);
-                    }
-                    case "PUT" -> {
-                        byte[] newValue = http.getRequestBody().readAllBytes();
-                        dao.upsert(parseId(query), newValue);
-                        http.sendResponseHeaders(201, 0); // OK
-                    }
-                    case "DELETE" -> {
-                        dao.delete(parseId(query));
-                        http.sendResponseHeaders(202, 0);
-                    }
-                    default -> http.sendResponseHeaders(405, 0);
-                }
-            } catch (IllegalArgumentException e) {
-                http.sendResponseHeaders(400, 0); // Bad Request
-            } catch (NoSuchElementException e) {
-                http.sendResponseHeaders(404, 0); // Not Found
-            }
-            http.close();
-        });
+        server.createContext("/v0/status", new StatusHandler());
+        server.createContext("/v0/entity", new EntityHandler(dao, null));
     }
 
-    private static String parseId(String query) {
-        if (query != null && query.startsWith("id=")) {
-            return query.substring(3);
-        } else {
-            throw new IllegalArgumentException("Bad query");
-        }
-    }
 }
